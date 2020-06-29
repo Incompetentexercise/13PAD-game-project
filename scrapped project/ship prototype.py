@@ -1,10 +1,13 @@
 import pygame as pygame
 import json
 
-with open('settins.json') as settings_file:
-    settings = json.load(settings_file)
 
-background_image = pygame.image.load('images/background_starry.png')
+# with open('settings.json') as settings_file:
+#     settings = json.load(settings_file)
+#
+# background_color = tuple(settings['window']['background color'])
+# background_image = pygame.image.load(settings['window']['background image'])
+# resolution = tuple(settings['window']['resolution'])
 
 
 def main():
@@ -13,7 +16,6 @@ def main():
 
     while True:
         clock.tick(60)
-        # screen.blit(background, (0, 0))
         screen.fill((11, 4, 20))
 
         for event in pygame.event.get():

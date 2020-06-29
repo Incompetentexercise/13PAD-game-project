@@ -1,10 +1,10 @@
-import pygame as pg
+import pygame as pygame
 
 
-class Entity(pg.sprite.Sprite):
+class Entity(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__()
-        self.image = pg.image.load("C:/Users/wmpoo/OneDrive/13PAD/Project/images/ship_jet.png").convert_alpha()
+        self.image = pygame.image.load("C:/Users/wmpoo/OneDrive/13PAD/Project/images/ship_jet.png").convert_alpha()
 
         # A reference to the original image to preserve the quality.
         self.orig_image = self.image
@@ -19,29 +19,29 @@ class Entity(pg.sprite.Sprite):
         """Rotate the image of the sprite around its center."""
         # `rotozoom` usually looks nicer than `rotate`. Pygame's rotation
         # functions return new images and don't modify the originals.
-        self.image = pg.transform.rotozoom(self.orig_image, self.angle, 1)
+        self.image = pygame.transform.rotozoom(self.orig_image, self.angle, 1)
         # Create a new rect with the center of the old rect.
         self.rect = self.image.get_rect(center=self.rect.center)
 
 
 def main():
-    screen = pg.display.set_mode((640, 480))
-    clock = pg.time.Clock()
-    all_sprites = pg.sprite.Group(Entity((320, 240)))
+    screen = pygame.display.set_mode((640, 480))
+    clock = pygame.time.Clock()
+    all_sprites = pygame.sprite.Group(Entity((320, 240)))
 
     while True:
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 return
 
         all_sprites.update()
         screen.fill((30, 30, 30))
         all_sprites.draw(screen)
-        pg.display.flip()
+        pygame.display.flip()
         clock.tick(30)
 
 
 if __name__ == '__main__':
-    pg.init()
+    pygame.init()
     main()
-    pg.quit()
+    pygame.quit()
