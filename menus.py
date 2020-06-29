@@ -88,11 +88,11 @@ class Menu:
         Looks at the menu state and calls the appropriate method to update and render that menu
         """
         if self.state == 'main':
-            self.do_main_menu()
+            self.__do_main_menu()
         elif self.state == 'instructions':
-            self.do_instruction_menu()
+            self.__do_instruction_menu()
         elif self.state == 'paused':
-            self.do_pause_menu() #TODO allow getting to main menu from pause menu
+            self.__do_pause_menu() #TODO allow getting to main menu from pause menu
 
     def blit(self, surface):
         """
@@ -100,7 +100,7 @@ class Menu:
         """
         surface.blit(self.surface, self.rect)
 
-    def do_main_menu(self):
+    def __do_main_menu(self):
         self.surface.fill(self.bg_colour)
         self.surface.blit(self.tx_main_heading['surface'], self.tx_main_heading['rect'])
         self.surface.blit(self.tx_play['surface'], self.tx_play['rect'])
@@ -119,7 +119,7 @@ class Menu:
                     global game_state
                     game_state = 'in game'
 
-    def do_instruction_menu(self):
+    def __do_instruction_menu(self):
         self.surface.fill(self.bg_colour)
         self.surface.blit(self.tx_instruct_heading['surface'], self.tx_instruct_heading['rect'])
 
@@ -130,7 +130,7 @@ class Menu:
                 if event.key in [pygame.K_ESCAPE]:
                     self.state = 'main'
 
-    def do_pause_menu(self):
+    def __do_pause_menu(self):
         self.surface.fill(self.bg_colour)
         self.surface.blit(self.tx_paused_heading['surface'], self.tx_paused_heading['rect'])
 
