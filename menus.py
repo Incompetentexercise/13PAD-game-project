@@ -76,11 +76,23 @@ class Menu:
             'INSTRUCTIONS', self.fonts['heading'], self.text_colour,
             (self.resolution[0]/2, 30)
         )
+        self.tx_instruct_exit = create_text(
+            '[ESC] - BACK', self.fonts['regular'], self.text_colour,
+            (self.center[0], self.resolution[1]-30)
+        )
 
         # pause menu text |
         self.tx_paused_heading = create_text(
             'PAUSED', self.fonts['heading'], self.text_colour,
             (self.center[0], 30)
+        )
+        self.tx_paused_resume = create_text(
+            '[ESC] - RESUME', self.fonts['regular'], self.text_colour,
+            (self.center[0], 60)
+        )
+        self.tx_paused_exit = create_text(
+            '[M] - EXIT TO MENU', self.fonts['regular'], self.text_colour,
+            (self.center[0], self.resolution[1]-30)
         )
 
     def do(self):
@@ -122,6 +134,7 @@ class Menu:
     def __do_instruction_menu(self):
         self.surface.fill(self.bg_colour)
         self.surface.blit(self.tx_instruct_heading['surface'], self.tx_instruct_heading['rect'])
+        self.surface.blit(self.tx_instruct_exit['surface'], self.tx_instruct_exit['rect'])
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
@@ -133,6 +146,8 @@ class Menu:
     def __do_pause_menu(self):
         self.surface.fill(self.bg_colour)
         self.surface.blit(self.tx_paused_heading['surface'], self.tx_paused_heading['rect'])
+        self.surface.blit(self.tx_paused_resume['surface'], self.tx_paused_resume['rect'])
+        self.surface.blit(self.tx_paused_exit['surface'], self.tx_paused_exit['rect'])
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
@@ -141,6 +156,8 @@ class Menu:
                 if event.key in [pygame.K_ESCAPE]:
                     global game_state
                     game_state = 'in game'
+                elif event.key in [pygame.K_m]:
+                    self.state = 'main'
 
 
 if __name__ == '__main__':
