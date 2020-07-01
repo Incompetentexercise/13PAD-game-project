@@ -16,6 +16,11 @@ def create_text(text, font, colour, position):
     return {'surface': _text, 'rect': _text_rect}
 
 
+def blit_text(text_list, surface):
+    for text_obj in text_list:
+        surface.blit(text_obj['surface'], text_obj['rect'])
+
+
 def stop():
     """
     Terminate the entire program safely
@@ -70,6 +75,11 @@ class Menu:
             '[I] - INSTRUCTIONS', self.fonts['regular'], self.text_colour,
             (self.center[0], self.center[1]+20)
         )
+        self.main_menu_text = [
+            self.tx_main_heading,
+            self.tx_play,
+            self.tx_instructions
+        ]
 
         #  instructions text |
         self.tx_instruct_heading = create_text(
@@ -80,6 +90,10 @@ class Menu:
             '[ESC] - BACK', self.fonts['regular'], self.text_colour,
             (self.center[0], self.resolution[1]-30)
         )
+        self.instruction_menu_text = [
+            self.tx_instruct_heading,
+            self.tx_instruct_exit
+        ]
 
         # pause menu text |
         self.tx_paused_heading = create_text(
@@ -94,6 +108,11 @@ class Menu:
             '[M] - EXIT TO MENU', self.fonts['regular'], self.text_colour,
             (self.center[0], self.resolution[1]-30)
         )
+        self.paused_menu_text = [
+            self.tx_paused_heading,
+            self.tx_paused_resume,
+            self.tx_paused_exit
+        ]
 
     def do(self):
         """
@@ -114,9 +133,7 @@ class Menu:
 
     def __do_main_menu(self):
         self.surface.fill(self.bg_colour)
-        self.surface.blit(self.tx_main_heading['surface'], self.tx_main_heading['rect'])
-        self.surface.blit(self.tx_play['surface'], self.tx_play['rect'])
-        self.surface.blit(self.tx_instructions['surface'], self.tx_instructions['rect'])
+        blit_text(self.main_menu_text, self.surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
@@ -133,8 +150,7 @@ class Menu:
 
     def __do_instruction_menu(self):
         self.surface.fill(self.bg_colour)
-        self.surface.blit(self.tx_instruct_heading['surface'], self.tx_instruct_heading['rect'])
-        self.surface.blit(self.tx_instruct_exit['surface'], self.tx_instruct_exit['rect'])
+        blit_text(self.instruction_menu_text, self.surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
@@ -145,9 +161,7 @@ class Menu:
 
     def __do_pause_menu(self):
         self.surface.fill(self.bg_colour)
-        self.surface.blit(self.tx_paused_heading['surface'], self.tx_paused_heading['rect'])
-        self.surface.blit(self.tx_paused_resume['surface'], self.tx_paused_resume['rect'])
-        self.surface.blit(self.tx_paused_exit['surface'], self.tx_paused_exit['rect'])
+        blit_text(self.paused_menu_text, self.surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
