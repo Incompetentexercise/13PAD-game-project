@@ -1,6 +1,5 @@
 import pygame as pygame
 from sys import exit
-import os as os
 
 
 def create_text(text, font, colour, position):
@@ -39,11 +38,11 @@ class Menu:
         Has three primary states: Main menu 'main', instruction screen 'instructions', paused menu 'paused'
         State can be changed with menu.state variable
 
-        Each tick:
+        Each cycle:
         Call menu.do()
           - to update and draw the menu onto its own surface
         Call menu.blit(surface)
-          - to draw the menu onto a surface or the main screen
+          - to draw the menu onto its parent surface or the main screen
         Call pygame.screen.update(menu.rect)
           - if only wanting to update the menu. Leaves the rest of the screen frozen.
             call pygame.screen.update() if wanting to update entire screen
@@ -177,14 +176,14 @@ class Menu:
 
 if __name__ == '__main__':
     pygame.font.init() # initialise the pygame font module to allow text rendering
-    resolution = (600, 700) # resolution of main window
+    resolution = (300, 240) # resolution of main window
     screen = pygame.display.set_mode(resolution) # create window
     clock = pygame.time.Clock() # create clock object to keep frames on time
     game_state = 'in menu' # keep track of whether game is in menu or playing
 
     # create a surface for the menu to display on
     # rendering on a surface allows the game to stay frozen in the background
-    menu_surface = pygame.Surface((200, 350))
+    menu_surface = pygame.Surface((220, 180))
     menu = Menu(menu_surface, (resolution[0]/2, resolution[1]/2))
 
     # give main screen a background to demonstrate menu above
