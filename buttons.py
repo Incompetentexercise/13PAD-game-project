@@ -73,13 +73,14 @@ def stop():
 
 if __name__ == '__main__':
     pygame.init() #Start Pygame
-    screen = pygame.display.set_mode((300, 500)) #Start the screen
+    screen = pygame.display.set_mode((300, 600)) #Start the screen
     clock = pygame.time.Clock()
     mouse_released = None
     buttons = [
         Button('images/play_button_medium', (150, 100), demo),
         Button('images/instructions_button', (150, 240), demo),
-        Button('images/power_button', (150, 380), stop)
+        Button('images/power_button', (150, 380), stop),
+        Button('images/back_button', (150, 500), demo)
     ]
 
     while True:
