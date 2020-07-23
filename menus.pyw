@@ -38,6 +38,8 @@ class Button:
                 The images be named 'idle.png' 'hover.png' 'pressed.png'
             position - a tuple (x, y) position in pixels. button will be centered
             command - the function/method to call when the button is pressed
+                should be given as a tuple of (command, argument)
+                if there is no argument then pass (command, None)
                 make sure to pass the command without brackets eg: self.example, not self.example()
 
         Each button has three states:
@@ -71,19 +73,23 @@ class Button:
         Update the buttons state based on the position of the cursor and whether the LMB is pressed
         Calls the button function when button is released
         """
-        # print("mouse pos", pygame.mouse.get_pos())
-        # print("button center", self.rect.center)
+
+        # get the mouse position. make the mouse 0 position the menu 0 position.
+        # not doing this stops the collision detection working
         self.mouse_pos = (
-            pygame.mouse.get_pos()[0] - self.parent_position[0],
-            pygame.mouse.get_pos()[1] - self.parent_position[1]
+            pygame.mouse.get_pos()[0] - self.parent_position[0], # mouse x pos
+            pygame.mouse.get_pos()[1] - self.parent_position[1] # mouse y pos
         )
         if self.rect.collidepoint(self.mouse_pos): # is the mouse over the button?
             if pygame.mouse.get_pressed()[0]: # is the LMB held down?
                 self.state = 'pressed'
             else:
                 if self.state == 'pressed':
-                    # LMB was pressed and now is released. Execute command
-                    self.command[0](self.command[1])
+                    # LMB was pressed and now is released. Execute linked command
+                    if self.command[1]: # if an argument is given for the command
+                        self.command[0](self.command[1]) # execute command with argument
+                    else: # no argument was given for the command
+                        self.command[0]()
                 self.state = 'hover' # LMB has been released. show button not pressed
         else:
             self.state = 'idle' # the button is not being interacted with
@@ -103,7 +109,7 @@ class Menu:
         """
         Creates and manages a menu window on top of the rest of the game
         This needs a surface to render onto. Minimum recommended size (220, 180)
-        The window will be placed centered on the position given
+        The top left corner of the window will be placed at the given location
         Has three primary states: Main menu 'main', instruction screen 'instructions', paused menu 'paused'
         State can be changed with menu.state variable
 
@@ -118,15 +124,18 @@ class Menu:
         """
 
         self.state = 'main' # stores the state of the menu, this is used to choose which menu to render
-        self.surface = pygame.image.load('images/menu_background.png').convert_alpha() # surface to draw all menu object on to
-        self.background = pygame.image.load('images/menu_background.png').convert_alpha()
-        self.rect = self.surface.get_rect() # dimensions of the surface
-        self.resolution = self.surface.get_size() # tuple of width and height of surface
-        self.position = position
-        self.rect.left = position[0] # place the surface onto the specified location
+        # make a surface from the given image. all the menu elements will be drawn on this surface
+        self.surface = pygame.image.load('images/menu_background.png').convert_alpha() # convert alpha allows transparency
+        # store the background image so the screen can be cleared each tick
+        self.background_image = pygame.image.load('images/menu_background.png').convert_alpha()
+        self.rect = self.surface.get_rect() # dimensions of the surface as pygame object
+        self.resolution = self.surface.get_size() # tuple of width and height of surface in pixels
+        self.position = position # store given position
+        # place the surface onto the specified position
+        self.rect.left = position[0]
         self.rect.top = position[1]
-        self.center = (self.resolution[0]/2, self.resolution[1]/2) # center for object placement reference
-        self.bg_colour = (200, 200, 200) # background colour for the menu surface
+        self.center = (self.resolution[0]/2, self.resolution[1]/2) # center of surface for object placement reference
+
         # fonts for use in menus
         self.fonts = {
             # font name, size(pt), bold, italic
@@ -136,12 +145,7 @@ class Menu:
         self.text_colour = (30, 30, 30) # colour for all text in menus
 
         #  Main menu objects |
-        self.main_menu_text = [
-            create_text(
-                'GAME!!', self.fonts['heading'], self.text_colour,
-                (self.resolution[0] / 2, 30)
-            )
-        ]
+        self.main_menu_text = []
         self.main_menu_buttons = [
             Button('images/play_button', (self.center[0], 90), self.position, (self.switch_state, "in game")),
             Button('images/instructions_button', (self.center[0], 240), self.position, (self.switch_state, "instructions")),
@@ -175,7 +179,7 @@ class Menu:
         """
         Looks at the menu state and calls the appropriate method to update and render that menu
         """
-        self.surface.blit(self.background, self.background.get_rect())
+        self.surface.blit(self.background_image, self.background_image.get_rect()) # clear menu by drawing empty background
         if self.state == 'main':
             self.__do_main_menu()
         elif self.state == 'instructions':
@@ -218,6 +222,7 @@ class Menu:
 
     def __do_instruction_menu(self):
         blit_text(self.instruction_menu_text, self.surface)
+
         for button in self.instruction_menu_buttons:
             button.update()
             button.blit(self.surface)
@@ -249,7 +254,7 @@ class Menu:
 
 if __name__ == '__main__':
     pygame.font.init() # initialise the pygame font module to allow text rendering
-    resolution = (600, 700) # resolution of main window
+    resolution = (450, 600) # resolution of main window
     screen = pygame.display.set_mode(resolution) # create window
     clock = pygame.time.Clock() # create clock object to keep frames on time
     game_state = 'in menu' # keep track of whether game is in menu or playing
@@ -258,10 +263,10 @@ if __name__ == '__main__':
     # rendering on a surface allows the game to stay frozen in the background
     # menu_surface = pygame.Surface((200, 500))
     menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
-    menu = Menu((resolution[0]/3, resolution[1]/6))
+    menu = Menu((resolution[0]/4, resolution[1]/8))
 
-    # give main screen a background to demonstrate menu above
-    screen.fill((240, 240, 240))
+    # give main screen a background to demonstrate menus above
+    screen.fill((0, 0, 0))
     pygame.display.update()
 
     while True:
@@ -272,7 +277,7 @@ if __name__ == '__main__':
             pygame.display.update(menu.rect) # update only the menu
 
         elif game_state == 'in game':
-            screen.fill((200, 200, 200))
+            screen.fill((0, 0, 0))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  #The user closed the window!

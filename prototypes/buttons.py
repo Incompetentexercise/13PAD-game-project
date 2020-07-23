@@ -77,7 +77,7 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     mouse_released = None
     buttons = [
-        Button('images/play_button_medium', (150, 100), demo),
+        Button('images/play_button', (150, 100), demo),
         Button('images/instructions_button', (150, 240), demo),
         Button('images/power_button', (150, 380), stop),
         Button('images/back_button', (150, 500), demo)
