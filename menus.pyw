@@ -114,7 +114,7 @@ class Menu:
         State can be changed with menu.state variable
 
         Each tick:
-        Call menu.do()
+        Call menu.update()
           - to update and draw the menu onto its own surface
         Call menu.blit(surface)
           - to draw the menu onto a surface or the main screen
@@ -123,6 +123,7 @@ class Menu:
             call pygame.screen.update() if wanting to update entire screen
         """
 
+        self.game_state = 'in menu'
         self.state = 'main' # stores the state of the menu, this is used to choose which menu to render
         # make a surface from the given image. all the menu elements will be drawn on this surface
         self.surface = pygame.image.load('images/menu_background.png').convert_alpha() # convert alpha allows transparency
@@ -175,7 +176,7 @@ class Menu:
             Button('images/internal_forward_button', (self.center[0], 100), self.position, (self.switch_state, 'in game'))
         ]
 
-    def do(self):
+    def update(self):
         """
         Looks at the menu state and calls the appropriate method to update and render that menu
         """
@@ -189,8 +190,8 @@ class Menu:
 
     def switch_state(self, target_state):
         if target_state == "in game":
-            global game_state
-            game_state = "in game"
+            print("switching to game")
+            self.game_state = "in game"
         else:
             self.state = target_state
 
@@ -257,7 +258,7 @@ if __name__ == '__main__':
     resolution = (450, 600) # resolution of main window
     screen = pygame.display.set_mode(resolution) # create window
     clock = pygame.time.Clock() # create clock object to keep frames on time
-    game_state = 'in menu' # keep track of whether game is in menu or playing
+    # game_state = 'in menu' # keep track of whether game is in menu or playing
 
     # create a surface for the menu to display on
     # rendering on a surface allows the game to stay frozen in the background
@@ -271,12 +272,12 @@ if __name__ == '__main__':
 
     while True:
         clock.tick(30) # aim for 30 ticks per second
-        if game_state == 'in menu': # if in a menu
-            menu.do() # update and draw menu
+        if menu.game_state == 'in menu': # if in a menu
+            menu.update() # update and draw menu
             menu.blit(screen) # blit menu onto screen
             pygame.display.update(menu.rect) # update only the menu
 
-        elif game_state == 'in game':
+        elif menu.game_state == 'in game':
             screen.fill((0, 0, 0))
 
             for event in pygame.event.get():
@@ -286,7 +287,7 @@ if __name__ == '__main__':
                 if event.type == pygame.KEYDOWN:
                     if event.key in [pygame.K_ESCAPE]:
                         # the player has paused the game. Enter pause menu
-                        game_state = 'in menu'
+                        menu.game_state = 'in menu'
                         menu.state = 'paused'
 
             pygame.display.update() # update entire screen

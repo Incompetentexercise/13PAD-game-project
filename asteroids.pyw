@@ -3,7 +3,7 @@ import random as random
 
 
 class Asteroid(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, game_resolution):
         """
         Asteroid object for game obstacles
         Each tick call:
@@ -12,8 +12,9 @@ class Asteroid(pygame.sprite.Sprite):
         for each obstacle
         """
         super().__init__()
+        self.game_resolution = game_resolution
         self.start_position = (
-            random.randint(0, resolution[0]),
+            random.randint(0, self.game_resolution[0]),
             -100
         )
         self.velocity = random.randint(2, 3)
@@ -34,8 +35,10 @@ class Asteroid(pygame.sprite.Sprite):
         # update position
         self.rect.y += self.velocity
         # delete if not on screen
-        if self.rect.y > resolution[1]:
-            obstacles.remove(self)
+        if self.rect.y > self.game_resolution[1]:
+            return False
+        else:
+            return True
 
     def blit(self, surface):
         # draw onto given surface
@@ -56,8 +59,6 @@ if __name__ == '__main__':
     background_image = pygame.image.load("images/game_background.png")
 
     obstacles = [
-        Asteroid(),
-        Asteroid()
     ]
 
     while True:
@@ -70,7 +71,7 @@ if __name__ == '__main__':
                 stop()
 
         if random.randint(1, 50) == 1:
-            obstacles.append(Asteroid())
+            obstacles.append(Asteroid(resolution))
 
         for obstacle in obstacles:
             obstacle.update()
