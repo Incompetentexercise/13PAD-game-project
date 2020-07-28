@@ -17,7 +17,7 @@ class Asteroid(pygame.sprite.Sprite):
             random.randint(0, self.game_resolution[0]),
             -100
         )
-        self.velocity = random.randint(2, 3)
+        self.velocity = random.randint(7, 13)
 
         # load image
         self.image = pygame.image.load(
@@ -31,9 +31,9 @@ class Asteroid(pygame.sprite.Sprite):
         # get mask from image
         self.mask = pygame.mask.from_surface(self.image)
 
-    def update(self):
+    def update(self, speed_multiplier):
         # update position
-        self.rect.y += self.velocity
+        self.rect.y += self.velocity*speed_multiplier
         # delete if not on screen
         if self.rect.y > self.game_resolution[1]:
             return False
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     ]
 
     while True:
-        clock.tick(30)
+        clock.tick(60)
         # screen.fill((0, 0, 0))
         screen.blit(background_image, background_image.get_rect())
 
@@ -70,11 +70,14 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
 
-        if random.randint(1, 50) == 1:
+        if random.randint(1, 10) == 1:
             obstacles.append(Asteroid(resolution))
 
         for obstacle in obstacles:
-            obstacle.update()
-            obstacle.blit(screen)
+            if obstacle.update(1):
+                obstacle.blit(screen)
+            else:
+                obstacles.remove(obstacle)
+
 
         pygame.display.update()
