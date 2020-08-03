@@ -36,15 +36,27 @@ class Player(pygame.sprite.Sprite):
         self.surface = None
         self.rect = None
         self.pressed_keys = None
+        self.left_pressed = None
+        self.right_pressed = None
 
     def update(self, speed_multiplier):
-        self.pressed_keys = pygame.key.get_pressed()
+        self.pressed_keys = pygame.key.get_pressed() # get a list of all the keys that are currently pressed
+        if self.pressed_keys[pygame.K_LEFT] or self.pressed_keys[pygame.K_a]:
+            self.left_pressed = True
+        else:
+            self.left_pressed = False
+
+        if self.pressed_keys[pygame.K_RIGHT] or self.pressed_keys[pygame.K_d]:
+            self.right_pressed = True
+        else:
+            self.right_pressed = False
+
         # update player direction
-        if self.pressed_keys[pygame.K_a] and self.pressed_keys[pygame.K_d]:
+        if self.left_pressed and self.right_pressed:
             self.direction = 'forward'
-        elif self.pressed_keys[pygame.K_a]:
+        elif self.left_pressed:
             self.direction = 'left'
-        elif self.pressed_keys[pygame.K_d]:
+        elif self.right_pressed:
             self.direction = 'right'
         else:
             self.direction = 'forward'
@@ -77,6 +89,7 @@ class Game:
         # self.player_direction = 'forward'
         self.speed_multiplier = 1
         self.pressed_keys = None
+        self.up_pressed = None
 
     def update(self):
         self.surface.blit(self.background_image, self.background_image.get_rect())
@@ -91,8 +104,14 @@ class Game:
                     menu.state = 'paused'
 
         self.pressed_keys = pygame.key.get_pressed()
-        if self.pressed_keys[pygame.K_w]:
-            self.speed_multiplier = 1.5
+
+        if self.pressed_keys[pygame.K_UP] or self.pressed_keys[pygame.K_w] or self.pressed_keys[pygame.KMOD_SHIFT]:
+            self.up_pressed = True
+        else:
+            self.up_pressed = False
+
+        if self.up_pressed:
+            self.speed_multiplier = 1.8
         else:
             self.speed_multiplier = 1
 
