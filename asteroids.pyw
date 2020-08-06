@@ -17,7 +17,8 @@ class Asteroid(pygame.sprite.Sprite):
             random.randint(0, self.game_resolution[0]),
             -100
         )
-        self.velocity = random.randint(7, 13)
+        self.velocity = random.randint(6, 12)
+        # self.velocity = 10
 
         # load image
         self.image = pygame.image.load(
@@ -36,13 +37,7 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect.y += self.velocity*speed_multiplier
         # delete if not on screen
         if self.rect.y > self.game_resolution[1]:
-            return False
-        else:
-            return True
-
-    def blit(self, surface):
-        # draw onto given surface
-        surface.blit(self.image, self.rect)
+            self.kill()
 
 
 if __name__ == '__main__':

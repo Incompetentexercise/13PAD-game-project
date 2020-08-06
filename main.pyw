@@ -12,6 +12,11 @@ def stop():
     exit() # stop python
 
 
+def check_collisions(primary, secondaries):
+    collisions = pygame.sprite.spritecollide(primary, secondaries, False, pygame.sprite.collide_mask)
+    return collisions
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -33,8 +38,9 @@ class Player(pygame.sprite.Sprite):
         self.speed = 'slow'
         self.horizontal_speed = 5
         self.position = [resolution[0]/2, resolution[1]-50]
-        self.surface = None
+        self.image = None
         self.rect = None
+        self.mask = None
         self.pressed_keys = None
         self.left_pressed = None
         self.right_pressed = None
@@ -65,7 +71,9 @@ class Player(pygame.sprite.Sprite):
             self.speed = 'fast'
         else:
             self.speed = 'slow'
-        self.surface = self.images[self.direction][self.speed]
+        self.image = self.images[self.direction][self.speed]
+        self.mask = pygame.mask.from_surface(self.image)
+
         if self.direction == 'left':
             if self.position[0] >= 0:
                 self.position[0] -= self.horizontal_speed*speed_multiplier
@@ -73,10 +81,7 @@ class Player(pygame.sprite.Sprite):
             if self.position[0] <= resolution[0]:
                 self.position[0] += self.horizontal_speed*speed_multiplier
 
-        self.rect = self.surface.get_rect(center=self.position)
-
-    def blit(self, surface):
-        surface.blit(self.surface, self.rect)
+        self.rect = self.image.get_rect(center=self.position)
 
 
 class Game:
@@ -84,8 +89,11 @@ class Game:
         # self.state = 'paused'
         self.background_image = pygame.image.load('images/game_background.png')
         self.surface = pygame.image.load('images/game_background.png')
-        self.asteroids = []
+        self.asteroids = pygame.sprite.Group()
+        self.sprites = pygame.sprite.Group()
         self.player = Player()
+        self.sprites.add(self.player)
+
         # self.player_direction = 'forward'
         self.speed_multiplier = 1
         self.pressed_keys = None
@@ -116,22 +124,17 @@ class Game:
             self.speed_multiplier = 1
 
         if random.randint(0, 15) == 1:
-            self.asteroids.append(asteroids.Asteroid(resolution))
+            __asteroid = asteroids.Asteroid(resolution)
+            self.asteroids.add(__asteroid)
+            self.sprites.add(__asteroid)
 
-        for asteroid in self.asteroids:
-            if asteroid.update(self.speed_multiplier): # if the asteroid is still on the screen
-                asteroid.blit(self.surface) # draw the asteroid
-            else:
-                self.asteroids.remove(asteroid) # asteroid is off the bottom, delete
-
-        self.player.update(self.speed_multiplier)
-        self.player.blit(self.surface)
+        self.sprites.update(self.speed_multiplier)
+        self.sprites.draw(self.surface)
+        if check_collisions(self.player, self.asteroids):
+            print('collided')
 
     def blit(self, surface):
         surface.blit(self.surface, self.surface.get_rect())
-
-    def reset(self):
-        pass
 
 
 if __name__ == '__main__':
