@@ -125,12 +125,16 @@ class Menu:
 
         self.game_state = 'in menu'
         self.state = 'main' # stores the state of the menu, this is used to choose which menu to render
+
+        # store the background images so the screen can be cleared each tick
+        self.large_background_image = pygame.image.load('images/large_menu_background.png').convert_alpha()
+        self.small_background_image = pygame.image.load('images/small_menu_background.png').convert_alpha()
+
         # make a surface from the given image. all the menu elements will be drawn on this surface
-        self.surface = pygame.image.load('images/menu_background.png').convert_alpha() # convert alpha allows transparency
-        # store the background image so the screen can be cleared each tick
-        self.background_image = pygame.image.load('images/menu_background.png').convert_alpha()
-        self.rect = self.surface.get_rect() # dimensions of the surface as pygame object
-        self.resolution = self.surface.get_size() # tuple of width and height of surface in pixels
+        self.surface = self.large_background_image.copy()
+        self.rect = self.surface.get_rect()
+        self.resolution = self.surface.get_size()
+
         self.position = position # store given position
         # place the surface onto the specified position
         self.rect.left = position[0]
@@ -172,7 +176,7 @@ class Menu:
             )
         ]
         self.pause_menu_buttons = [
-            Button('images/internal_exit_button', (self.center[0], 420), self.position, (self.switch_state, "main")),
+            Button('images/internal_exit_button', (self.center[0], 200), self.position, (self.switch_state, "main")),
             Button('images/internal_forward_button', (self.center[0], 100), self.position, (self.switch_state, 'in game'))
         ]
 
@@ -180,13 +184,35 @@ class Menu:
         """
         Looks at the menu state and calls the appropriate method to update and render that menu
         """
-        self.surface.blit(self.background_image, self.background_image.get_rect()) # clear menu by drawing empty background
+
+        # does this menu need a big or small background?
+        if self.state in ['main', 'instructions']:
+            self.surface = self.large_background_image.copy()
+            self.rect = self.surface.get_rect()
+            self.surface.blit(self.large_background_image, self.rect)
+
+        elif self.state in ['paused', 'death']:
+            self.surface = self.small_background_image.copy()
+            self.rect = self.surface.get_rect()
+            self.surface.blit(self.small_background_image, self.rect)
+
+        self.resolution = self.surface.get_size()
+        # place surface in correct position
+        self.rect.left = self.position[0]
+        self.rect.top = self.position[1]
+
         if self.state == 'main':
+            self.surface.blit(self.large_background_image, self.large_background_image.get_rect())
             self.__do_main_menu()
         elif self.state == 'instructions':
+            self.surface.blit(self.large_background_image, self.large_background_image.get_rect())
             self.__do_instruction_menu()
         elif self.state == 'paused':
+            self.surface.blit(self.small_background_image, self.small_background_image.get_rect())
             self.__do_pause_menu()
+        elif self.state == 'death':
+            self.surface.blit(self.small_background_image, self.small_background_image.get_rect())
+            self.__do_death_menu()
 
     def switch_state(self, target_state):
         if target_state == "in game":
@@ -252,6 +278,12 @@ class Menu:
             button.update()
             button.blit(self.surface)
 
+    def __do_death_menu(self):
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:  #The user closed the window!
+                stop()
+
 
 if __name__ == '__main__':
     pygame.font.init() # initialise the pygame font module to allow text rendering
@@ -263,7 +295,7 @@ if __name__ == '__main__':
     # create a surface for the menu to display on
     # rendering on a surface allows the game to stay frozen in the background
     # menu_surface = pygame.Surface((200, 500))
-    menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
+    # menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
     menu = Menu((resolution[0]/4, resolution[1]/8))
 
     # give main screen a background to demonstrate menus above
