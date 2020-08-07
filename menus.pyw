@@ -1,6 +1,10 @@
 import pygame as pygame
 from sys import exit
 
+ButtonPress = pygame.USEREVENT+1
+PlayButtonPress = pygame.event.Event(ButtonPress, {'command': 'RESTART'})
+
+
 
 def create_text(text, font, colour, position):
     """
@@ -147,12 +151,12 @@ class Menu:
             'regular': pygame.font.SysFont('Courier New', 15, False, False),
             'heading': pygame.font.SysFont('Courier New', 18, True, False)
         }
-        self.text_colour = (30, 30, 30) # colour for all text in menus
+        self.text_colour = (255, 255, 255) # colour for all text in menus
 
         #  Main menu objects |
         self.main_menu_text = []
         self.main_menu_buttons = [
-            Button('images/play_button', (self.center[0], 90), self.position, (self.switch_state, "in game")),
+            Button('images/neon_play_button', (self.center[0], 90), self.position, (self.switch_state, "in game")),
             Button('images/instructions_button', (self.center[0], 240), self.position, (self.switch_state, "instructions")),
             Button('images/power_button', (self.center[0], 390), self.position, (stop, None))
         ]
@@ -178,6 +182,17 @@ class Menu:
         self.pause_menu_buttons = [
             Button('images/internal_exit_button', (self.center[0], 200), self.position, (self.switch_state, "main")),
             Button('images/internal_forward_button', (self.center[0], 100), self.position, (self.switch_state, 'in game'))
+        ]
+
+        # death menu objects
+        self.death_menu_text = [
+            create_text(
+                'YOU CRASHED', self.fonts['heading'], self.text_colour,
+                (self.center[0], 25)
+            )
+        ]
+        self.death_menu_buttons = [
+            Button('images/internal_exit_button', (self.center[0], 200), self.position, (self.switch_state, "main")),
         ]
 
     def update(self):
@@ -218,6 +233,7 @@ class Menu:
         if target_state == "in game":
             print("switching to game")
             self.game_state = "in game"
+            pygame.event.post(PlayButtonPress)
         else:
             self.state = target_state
 
@@ -279,10 +295,15 @@ class Menu:
             button.blit(self.surface)
 
     def __do_death_menu(self):
+        blit_text(self.death_menu_text, self.surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
+
+        for button in self.death_menu_buttons:
+            button.update()
+            button.blit(self.surface)
 
 
 if __name__ == '__main__':

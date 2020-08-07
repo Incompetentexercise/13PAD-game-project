@@ -4,6 +4,8 @@ import menus
 import asteroids
 
 
+
+
 def stop():
     """
     Terminate the entire program safely
@@ -123,6 +125,7 @@ class Game:
         else:
             self.speed_multiplier = 1
 
+        #TODO make asteroid generation regular
         if random.randint(0, 15) == 1:
             __asteroid = asteroids.Asteroid(resolution)
             self.asteroids.add(__asteroid)
@@ -132,6 +135,8 @@ class Game:
         self.sprites.draw(self.surface)
         if check_collisions(self.player, self.asteroids):
             print('collided')
+            menu.game_state = 'in menu'
+            menu.state = 'death'
 
     def blit(self, surface):
         surface.blit(self.surface, self.surface.get_rect())
@@ -143,7 +148,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(resolution)
     clock = pygame.time.Clock()
 
-    menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
+    # menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
     menu = menus.Menu((resolution[0] / 3.4, resolution[1] / 8))
 
     game = Game()
@@ -157,6 +162,11 @@ if __name__ == '__main__':
             menu.update()
             menu.blit(screen)
             pygame.display.update(menu.rect)
+            for event in pygame.event.get(eventtype=menus.ButtonPress):
+                print('button pressed event')
+                if event.command == "RESTART":
+                    print('Restart button')
+                    game = Game()
 
         elif menu.game_state == "in game":
             game.update()

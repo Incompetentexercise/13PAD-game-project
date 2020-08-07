@@ -11,6 +11,7 @@ class Asteroid(pygame.sprite.Sprite):
                 blit(parent surface)
         for each obstacle
         """
+
         super().__init__()
         self.game_resolution = game_resolution
         self.start_position = (
@@ -18,7 +19,6 @@ class Asteroid(pygame.sprite.Sprite):
             -100
         )
         self.velocity = random.randint(6, 12)
-        # self.velocity = 10
 
         # load image
         self.image = pygame.image.load(
