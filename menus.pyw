@@ -2,8 +2,15 @@ import pygame as pygame
 from sys import exit
 
 ButtonPress = pygame.USEREVENT+1
-PlayButtonPress = pygame.event.Event(ButtonPress, {'command': 'RESTART'})
-
+GameCommand = pygame.USEREVENT+2
+button_events = {
+    'PLAY': pygame.event.Event(ButtonPress, {'name': 'PLAY'}),
+    'INSTRUCTIONS': pygame.event.Event(ButtonPress, {'name': 'INSTRUCTIONS'}),
+    'INTERNAL_EXIT': pygame.event.Event(ButtonPress, {'name': 'INTERNAL_EXIT'})
+}
+game_events = {
+    'RESTART': pygame.event.Event(GameCommand, {'command': 'RESTART'})
+}
 
 
 def create_text(text, font, colour, position):
@@ -34,7 +41,7 @@ def stop():
 
 
 class Button:
-    def __init__(self, image_directory, position, parent_position, command):
+    def __init__(self, image_directory, position, parent_position, event):
         """
         Creates, updates, and draws buttons
         Takes:
@@ -63,7 +70,7 @@ class Button:
             "pressed": pygame.image.load(image_directory + "/pressed.png").convert_alpha()
         }
 
-        self.command = command
+        self.event = event
         self.state = 'idle'
         self.position = position
         self.image = self.images[self.state]
@@ -90,10 +97,7 @@ class Button:
             else:
                 if self.state == 'pressed':
                     # LMB was pressed and now is released. Execute linked command
-                    if self.command[1]: # if an argument is given for the command
-                        self.command[0](self.command[1]) # execute command with argument
-                    else: # no argument was given for the command
-                        self.command[0]()
+                    pygame.event.post(self.event)
                 self.state = 'hover' # LMB has been released. show button not pressed
         else:
             self.state = 'idle' # the button is not being interacted with
@@ -156,9 +160,9 @@ class Menu:
         #  Main menu objects |
         self.main_menu_text = []
         self.main_menu_buttons = [
-            Button('images/neon_play_button', (self.center[0], 90), self.position, (self.switch_state, "in game")),
-            Button('images/instructions_button', (self.center[0], 240), self.position, (self.switch_state, "instructions")),
-            Button('images/power_button', (self.center[0], 390), self.position, (stop, None))
+            Button('images/play_button', (self.center[0], 90), self.position, button_events['PLAY']),
+            Button('images/instructions_button', (self.center[0], 240), self.position, button_events['INSTRUCTIONS']),
+            Button('images/power_button', (self.center[0], 390), self.position, pygame.QUIT)
         ]
 
         # Instruction menu objects
@@ -169,7 +173,7 @@ class Menu:
             )
         ]
         self.instruction_menu_buttons = [
-            Button('images/back_button', (self.center[0], 420), self.position, (self.switch_state, "main"))
+            Button('images/back_button', (self.center[0], 420), self.position, button_events['INTERNAL_EXIT'])
         ]
 
         # pause menu objects |
@@ -180,19 +184,20 @@ class Menu:
             )
         ]
         self.pause_menu_buttons = [
-            Button('images/internal_exit_button', (self.center[0], 200), self.position, (self.switch_state, "main")),
-            Button('images/internal_forward_button', (self.center[0], 100), self.position, (self.switch_state, 'in game'))
+            Button('images/internal_exit_button', (self.center[0], 200), self.position, button_events['INTERNAL_EXIT']),
+            Button('images/internal_forward_button', (self.center[0], 100), self.position, button_events['PLAY'])
         ]
 
         # death menu objects
         self.death_menu_text = [
             create_text(
                 'YOU CRASHED', self.fonts['heading'], self.text_colour,
-                (self.center[0], 25)
+                (self.center[0], 40)
             )
         ]
         self.death_menu_buttons = [
-            Button('images/internal_exit_button', (self.center[0], 200), self.position, (self.switch_state, "main")),
+            Button('images/internal_forward_button', (self.center[0], 100), self.position, button_events['PLAY']),
+            Button('images/internal_exit_button', (self.center[0], 200), self.position, button_events['INTERNAL_EXIT']),
         ]
 
     def update(self):
@@ -217,25 +222,13 @@ class Menu:
         self.rect.top = self.position[1]
 
         if self.state == 'main':
-            self.surface.blit(self.large_background_image, self.large_background_image.get_rect())
             self.__do_main_menu()
         elif self.state == 'instructions':
-            self.surface.blit(self.large_background_image, self.large_background_image.get_rect())
             self.__do_instruction_menu()
         elif self.state == 'paused':
-            self.surface.blit(self.small_background_image, self.small_background_image.get_rect())
             self.__do_pause_menu()
         elif self.state == 'death':
-            self.surface.blit(self.small_background_image, self.small_background_image.get_rect())
             self.__do_death_menu()
-
-    def switch_state(self, target_state):
-        if target_state == "in game":
-            print("switching to game")
-            self.game_state = "in game"
-            pygame.event.post(PlayButtonPress)
-        else:
-            self.state = target_state
 
     def blit(self, surface):
         """
@@ -245,23 +238,28 @@ class Menu:
 
     def __do_main_menu(self):
         blit_text(self.main_menu_text, self.surface)
+        for button in self.main_menu_buttons:
+            button.update()
+            button.blit(self.surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
 
-            if event.type == pygame.KEYDOWN:
+            if event.type == ButtonPress:
+                if event.name == 'PLAY':
+                    self.game_state = 'in game'
+                    pygame.event.post(game_events['RESTART'])
+                elif event.name == 'INSTRUCTIONS':
+                    self.state = 'instructions'
+
+            elif event.type == pygame.KEYDOWN:
                 if event.key in [pygame.K_ESCAPE]:
                     stop()
                 elif event.key in [pygame.K_i]:
                     self.state = 'instructions'
                 elif event.key in [pygame.K_RETURN]:
-                    global game_state
-                    game_state = 'in game'
-
-        for button in self.main_menu_buttons:
-            button.update()
-            button.blit(self.surface)
+                    self.game_state = 'in game'
 
     def __do_instruction_menu(self):
         blit_text(self.instruction_menu_text, self.surface)
@@ -273,37 +271,56 @@ class Menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
-            if event.type == pygame.KEYDOWN:
+
+            if event.type == ButtonPress:
+                if event.name == 'INTERNAL_EXIT':
+                    self.state = 'main'
+
+            elif event.type == pygame.KEYDOWN:
                 if event.key in [pygame.K_ESCAPE]:
                     self.state = 'main'
 
     def __do_pause_menu(self):
         blit_text(self.paused_menu_text, self.surface)
 
+        for button in self.pause_menu_buttons:
+            button.update()
+            button.blit(self.surface)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
-            if event.type == pygame.KEYDOWN:
+
+            if event.type == ButtonPress:
+                if event.name == 'INTERNAL_EXIT':
+                    self.state = 'main'
+                elif event.name == 'PLAY':
+                    self.game_state = 'in game'
+
+            elif event.type == pygame.KEYDOWN:
                 if event.key in [pygame.K_ESCAPE]:
                     global game_state
                     game_state = 'in game'
                 elif event.key in [pygame.K_m]:
                     self.state = 'main'
 
-        for button in self.pause_menu_buttons:
-            button.update()
-            button.blit(self.surface)
-
     def __do_death_menu(self):
         blit_text(self.death_menu_text, self.surface)
+
+        for button in self.death_menu_buttons:
+            button.update()
+            button.blit(self.surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
 
-        for button in self.death_menu_buttons:
-            button.update()
-            button.blit(self.surface)
+            elif event.type == ButtonPress:
+                if event.name == 'INTERNAL_EXIT':
+                    self.state = 'main'
+                elif event.name == 'PLAY':
+                    self.game_state = 'in game'
+                    pygame.event.post(game_events['RESTART'])
 
 
 if __name__ == '__main__':

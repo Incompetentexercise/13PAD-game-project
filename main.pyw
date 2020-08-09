@@ -3,7 +3,7 @@ import random as random
 import menus
 import asteroids
 
-
+GENERATE_OBSTACLE = pygame.USEREVENT+3
 
 
 def stop():
@@ -87,11 +87,12 @@ class Player(pygame.sprite.Sprite):
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, difficulty):
         # self.state = 'paused'
         self.background_image = pygame.image.load('images/game_background.png')
         self.surface = pygame.image.load('images/game_background.png')
         self.asteroids = pygame.sprite.Group()
+        pygame.time.set_timer(GENERATE_OBSTACLE, int(200/difficulty))
         self.sprites = pygame.sprite.Group()
         self.player = Player()
         self.sprites.add(self.player)
@@ -112,6 +113,10 @@ class Game:
                     # the player has paused the game. Enter pause menu
                     menu.game_state = 'in menu'
                     menu.state = 'paused'
+            elif event.type == GENERATE_OBSTACLE:
+                __asteroid = asteroids.Asteroid(resolution)
+                self.asteroids.add(__asteroid)
+                self.sprites.add(__asteroid)
 
         self.pressed_keys = pygame.key.get_pressed()
 
@@ -125,11 +130,10 @@ class Game:
         else:
             self.speed_multiplier = 1
 
-        #TODO make asteroid generation regular
-        if random.randint(0, 15) == 1:
-            __asteroid = asteroids.Asteroid(resolution)
-            self.asteroids.add(__asteroid)
-            self.sprites.add(__asteroid)
+        # if random.randint(0, 15) == 1:
+        #     __asteroid = asteroids.Asteroid(resolution)
+        #     self.asteroids.add(__asteroid)
+        #     self.sprites.add(__asteroid)
 
         self.sprites.update(self.speed_multiplier)
         self.sprites.draw(self.surface)
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     # menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
     menu = menus.Menu((resolution[0] / 3.4, resolution[1] / 8))
 
-    game = Game()
+    game = Game(1)
     game.blit(screen)
     pygame.display.update()
 
@@ -162,11 +166,11 @@ if __name__ == '__main__':
             menu.update()
             menu.blit(screen)
             pygame.display.update(menu.rect)
-            for event in pygame.event.get(eventtype=menus.ButtonPress):
+            for event in pygame.event.get(eventtype=menus.GameCommand):
                 print('button pressed event')
                 if event.command == "RESTART":
                     print('Restart button')
-                    game = Game()
+                    game = Game(1)
 
         elif menu.game_state == "in game":
             game.update()
