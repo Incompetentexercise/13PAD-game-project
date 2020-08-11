@@ -40,39 +40,39 @@ class Asteroid(pygame.sprite.Sprite):
             self.kill()
 
 
-if __name__ == '__main__':
-    def stop():
-        """
-        Terminate the entire program safely
-        """
-        pygame.quit()  # stop pygame
-        exit()  # stop python
-
-    resolution = (450, 600)  # resolution of main window
-    screen = pygame.display.set_mode(resolution)  # create window
-    clock = pygame.time.Clock()  # create clock object to keep frames on time
-    background_image = pygame.image.load("images/game_background.png")
-
-    obstacles = [
-    ]
-
-    while True:
-        clock.tick(60)
-        # screen.fill((0, 0, 0))
-        screen.blit(background_image, background_image.get_rect())
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:  #The user closed the window!
-                stop()
-
-        if random.randint(1, 10) == 1:
-            obstacles.append(Asteroid(resolution))
-
-        for obstacle in obstacles:
-            if obstacle.update(1):
-                obstacle.blit(screen)
-            else:
-                obstacles.remove(obstacle)
-
-
-        pygame.display.update()
+# if __name__ == '__main__':
+#     def stop():
+#         """
+#         Terminate the entire program safely
+#         """
+#         pygame.quit()  # stop pygame
+#         exit()  # stop python
+#
+#     resolution = (450, 600)  # resolution of main window
+#     screen = pygame.display.set_mode(resolution)  # create window
+#     clock = pygame.time.Clock()  # create clock object to keep frames on time
+#     background_image = pygame.image.load("images/game_background.png")
+#
+#     obstacles = [
+#     ]
+#
+#     while True:
+#         clock.tick(60)
+#         # screen.fill((0, 0, 0))
+#         screen.blit(background_image, background_image.get_rect())
+#
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:  #The user closed the window!
+#                 stop()
+#
+#         if random.randint(1, 10) == 1:
+#             obstacles.append(Asteroid(resolution))
+#
+#         for obstacle in obstacles:
+#             if obstacle.update(1):
+#                 obstacle.blit(screen)
+#             else:
+#                 obstacles.remove(obstacle)
+#
+#
+#         pygame.display.update()

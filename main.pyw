@@ -99,11 +99,13 @@ class Game:
 
         # self.player_direction = 'forward'
         self.speed_multiplier = 1
+        self.speed_multiplier_multiplier = 1 # used to gradually increase the speed
         self.pressed_keys = None
         self.up_pressed = None
 
     def update(self):
         self.surface.blit(self.background_image, self.background_image.get_rect())
+        self.speed_multiplier_multiplier += 0.0002
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
@@ -130,12 +132,7 @@ class Game:
         else:
             self.speed_multiplier = 1
 
-        # if random.randint(0, 15) == 1:
-        #     __asteroid = asteroids.Asteroid(resolution)
-        #     self.asteroids.add(__asteroid)
-        #     self.sprites.add(__asteroid)
-
-        self.sprites.update(self.speed_multiplier)
+        self.sprites.update(self.speed_multiplier*self.speed_multiplier_multiplier)
         self.sprites.draw(self.surface)
         if check_collisions(self.player, self.asteroids):
             print('collided')
@@ -164,6 +161,7 @@ if __name__ == '__main__':
 
         if menu.game_state == 'in menu':
             menu.update()
+            game.blit(screen)
             menu.blit(screen)
             pygame.display.update(menu.rect)
             for event in pygame.event.get(eventtype=menus.GameCommand):
@@ -175,4 +173,5 @@ if __name__ == '__main__':
         elif menu.game_state == "in game":
             game.update()
             game.blit(screen)
-            pygame.display.update()
+
+        pygame.display.update()

@@ -136,6 +136,7 @@ class Menu:
 
         # store the background images so the screen can be cleared each tick
         self.large_background_image = pygame.image.load('images/large_menu_background.png').convert_alpha()
+        self.wide_background_image = pygame.image.load('images/instructions_background.png').convert_alpha()
         self.small_background_image = pygame.image.load('images/small_menu_background.png').convert_alpha()
 
         # make a surface from the given image. all the menu elements will be drawn on this surface
@@ -175,6 +176,7 @@ class Menu:
         self.instruction_menu_buttons = [
             Button('images/back_button', (self.center[0], 420), self.position, button_events['INTERNAL_EXIT'])
         ]
+        self.instructions_image = pygame.image.load("images/instructions.png").convert_alpha()
 
         # pause menu objects |
         self.paused_menu_text = [
@@ -206,10 +208,15 @@ class Menu:
         """
 
         # does this menu need a big or small background?
-        if self.state in ['main', 'instructions']:
+        if self.state in ['main']:
             self.surface = self.large_background_image.copy()
             self.rect = self.surface.get_rect()
             self.surface.blit(self.large_background_image, self.rect)
+
+        elif self.state in ['instructions']:
+            self.surface = self.wide_background_image.copy()
+            self.rect = self.surface.get_rect()
+            self.surface.blit(self.wide_background_image, self.rect)
 
         elif self.state in ['paused', 'death']:
             self.surface = self.small_background_image.copy()
@@ -263,6 +270,7 @@ class Menu:
 
     def __do_instruction_menu(self):
         blit_text(self.instruction_menu_text, self.surface)
+        self.surface.blit(self.instructions_image, self.instructions_image.get_rect())
 
         for button in self.instruction_menu_buttons:
             button.update()
