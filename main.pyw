@@ -1,9 +1,23 @@
 import pygame as pygame
-import random as random
 import menus
 import asteroids
+from math import sin, cos, radians
 
 GENERATE_OBSTACLE = pygame.USEREVENT+3
+
+
+def resolve_velocity(direction, speed):
+    if 0 > direction > 180: # bullet would be travelling down, not okay.
+        return 'why?'
+    elif direction < 90:
+        __theta = direction
+        __x = -speed*cos(radians(__theta))
+    else:
+        __theta = 180 - direction
+        __x = speed*cos(radians(__theta))
+    __y = speed*sin(radians(__theta))
+
+    return __x, __y
 
 
 def stop():
@@ -17,6 +31,35 @@ def stop():
 def check_collisions(primary, secondaries):
     collisions = pygame.sprite.spritecollide(primary, secondaries, False, pygame.sprite.collide_mask)
     return collisions
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, position, direction):
+        super().__init__()
+        self.position = list(position)
+        self.images = [
+            pygame.image.load('images/bullets/0.png').convert_alpha(),
+            pygame.image.load('images/bullets/1.png').convert_alpha(),
+            pygame.image.load('images/bullets/2.png').convert_alpha()
+        ]
+        self.image_counter = 0
+        self.image = self.images[self.image_counter]
+        self.rect = self.image.get_rect(center=self.position)
+        self.mask = pygame.mask.from_surface(pygame.image.load('images/bullets/mask.png').convert_alpha())
+
+        self.direction = direction
+        self.speed = 25
+        self.move_amount = (0, 0)
+
+    def update(self, speed_multiplier):
+        self.move_amount = resolve_velocity(self.direction, self.speed/speed_multiplier)
+        self.position[0] += self.move_amount[0]
+        self.position[1] -= self.move_amount[1]
+        self.image_counter += 1
+        self.image = self.images[int(self.image_counter/10)]
+        if self.image_counter == 29:
+            self.image_counter = 0
+        self.rect.center = self.position
 
 
 class Player(pygame.sprite.Sprite):
@@ -46,9 +89,11 @@ class Player(pygame.sprite.Sprite):
         self.pressed_keys = None
         self.left_pressed = None
         self.right_pressed = None
+        self.__temp_bullet = None
 
     def update(self, speed_multiplier):
         self.pressed_keys = pygame.key.get_pressed() # get a list of all the keys that are currently pressed
+
         if self.pressed_keys[pygame.K_LEFT] or self.pressed_keys[pygame.K_a]:
             self.left_pressed = True
         else:
@@ -85,6 +130,17 @@ class Player(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect(center=self.position)
 
+    def shoot(self):
+        if self.direction == 'left':
+            self.__temp_bullet = Bullet(self.position, 60)
+        elif self.direction == 'forward':
+            self.__temp_bullet = Bullet(self.position, 90)
+        else:
+            self.__temp_bullet = Bullet(self.position, 120)
+        global game
+        game.sprites.add(self.__temp_bullet)
+        game.bullets.add(self.__temp_bullet)
+
 
 class Game:
     def __init__(self, difficulty):
@@ -94,6 +150,7 @@ class Game:
         self.asteroids = pygame.sprite.Group()
         pygame.time.set_timer(GENERATE_OBSTACLE, int(200/difficulty))
         self.sprites = pygame.sprite.Group()
+        self.bullets = pygame.sprite.Group()
         self.player = Player()
         self.sprites.add(self.player)
 
@@ -115,6 +172,8 @@ class Game:
                     # the player has paused the game. Enter pause menu
                     menu.game_state = 'in menu'
                     menu.state = 'paused'
+                elif event.key == pygame.K_SPACE:
+                    self.player.shoot()
             elif event.type == GENERATE_OBSTACLE:
                 __asteroid = asteroids.Asteroid(resolution)
                 self.asteroids.add(__asteroid)
@@ -133,6 +192,7 @@ class Game:
             self.speed_multiplier = 1
 
         self.sprites.update(self.speed_multiplier*self.speed_multiplier_multiplier)
+        pygame.sprite.groupcollide(self.asteroids, self.bullets, True, True, pygame.sprite.collide_mask)
         self.sprites.draw(self.surface)
         if check_collisions(self.player, self.asteroids):
             print('collided')
@@ -155,6 +215,9 @@ if __name__ == '__main__':
     game = Game(1)
     game.blit(screen)
     pygame.display.update()
+    print(resolve_velocity(60, 25))
+    print(resolve_velocity(90, 25))
+    print(resolve_velocity(120, 25))
 
     while True:
         clock.tick(60) # keep framerate at 60fps
