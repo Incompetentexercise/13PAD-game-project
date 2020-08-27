@@ -29,14 +29,22 @@ def resolve_velocity(direction, speed):
 
 
 def stop():
-    """
-    Terminate the entire program safely
-    """
+    """ Terminate the entire program safely """
     pygame.quit() # stop pygame
     exit() # stop python
 
 
 def check_collisions(primary, secondaries):
+    """
+    Check for collisions between a sprite and a group of sprites
+        Primary is a single sprite
+        Secondaries is a sprite group
+    does collision check using masks
+    for efficiency, each sprite should have a mask generated when it is created
+
+    Returns a list of secondary sprites that are colliding with the primary sprite
+    Does NOT delete colliding sprites
+    """
     collisions = pygame.sprite.spritecollide(primary, secondaries, False, pygame.sprite.collide_mask)
     return collisions
 
@@ -57,23 +65,35 @@ class Decorative(pygame.sprite.Sprite):
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position, direction):
-        super().__init__()
-        self.position = list(position)
+        """
+        A bullet fired at asteroids by the player's ship
+        """
+        super().__init__() # initialize sprite parent class
+        self.position = list(position) # make a copy of the given position
+        # load own images, each is slightly different for animation
         self.images = [
             pygame.image.load('images/bullets/0.png').convert_alpha(),
             pygame.image.load('images/bullets/1.png').convert_alpha(),
             pygame.image.load('images/bullets/2.png').convert_alpha()
         ]
+        # counter to keep track of when to switch images
+        #       <10 img 0
+        #       >=10<20 img 1
+        #       >=20<30 img 2
         self.image_counter = 0
         self.image = self.images[self.image_counter]
         self.rect = self.image.get_rect(center=self.position)
+        # all the images have a very similar mask so only one needs to be generated
         self.mask = pygame.mask.from_surface(pygame.image.load('images/bullets/mask.png').convert_alpha())
 
         self.direction = direction
         self.speed = 25
-        self.move_amount = (0, 0)
+        self.move_amount = (0, 0) # amount to move this tick
 
     def update(self, speed_multiplier):
+        """
+        update position and image
+        """
         self.move_amount = resolve_velocity(self.direction, self.speed/speed_multiplier)
         self.position[0] += self.move_amount[0]
         self.position[1] -= self.move_amount[1]
@@ -103,8 +123,8 @@ class Player(pygame.sprite.Sprite):
         }
         self.direction = 'forward'
         self.speed = 'slow'
-        self.horizontal_speed = 5
-        self.position = [resolution[0]/2, resolution[1]-50]
+        self.horizontal_speed = 5 # how fast the player can move to the side
+        self.position = [resolution[0]/2, resolution[1]-50] # center bottom
         self.image = None
         self.rect = None
         self.mask = None
@@ -140,19 +160,26 @@ class Player(pygame.sprite.Sprite):
             self.speed = 'fast'
         else:
             self.speed = 'slow'
-        self.image = self.images[self.direction][self.speed]
-        self.mask = pygame.mask.from_surface(self.image)
+        self.image = self.images[self.direction][self.speed] # pick image based on direction and speed
+        self.mask = pygame.mask.from_surface(self.image) # update collision mask
 
         if self.direction == 'left':
+            # move left
             if self.position[0] >= 0:
+                # if not at left edge
                 self.position[0] -= self.horizontal_speed*speed_multiplier
         elif self.direction == 'right':
+            # move right
             if self.position[0] <= resolution[0]:
+                # if not at right edge
                 self.position[0] += self.horizontal_speed*speed_multiplier
 
-        self.rect = self.image.get_rect(center=self.position)
+        self.rect = self.image.get_rect(center=self.position) # place rect at new position
 
     def shoot(self):
+        """
+        Initialize a bullet in the correct place and direction
+        """
         if self.direction == 'left':
             self.__temp_bullet = Bullet(self.position, 60)
         elif self.direction == 'forward':
@@ -167,30 +194,43 @@ class Player(pygame.sprite.Sprite):
 
 class Game:
     def __init__(self, difficulty):
+        """
+        Manages all the gamey parts of the program that the player can actually play
+        """
+        # load background
         self.background_image = pygame.image.load('images/game_background.png')
-        self.surface = pygame.image.load('images/game_background.png')
+        # make a copy of the background to avoid changing the original
+        self.surface = self.background_image.copy()
+
+        # set a timer that posts the generate obstacle event at an interval depending on difficulty
+        pygame.time.set_timer(GENERATE_OBSTACLE, int(200 / difficulty))
         self.asteroids = pygame.sprite.Group()
-        pygame.time.set_timer(GENERATE_OBSTACLE, int(200/difficulty))
         self.sprites = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
         self.player = Player()
         self.sprites.add(self.player)
 
-        self.speed_multiplier = 1
+        self.speed_multiplier = 1 # depends on whether a go-faster key is pressed
         self.speed_multiplier_multiplier = 1 # used to gradually increase the speed
         self.pressed_keys = None
         self.up_pressed = None
-        self.__collision_point = None
 
     def update(self):
+        """
+        Update the game state
+        Updates all the objects in the game
+        Handles all events for a tick
+        """
+        # clear surface with clean background
         self.surface.blit(self.background_image, self.background_image.get_rect())
-        self.speed_multiplier_multiplier += 0.0002
+        self.speed_multiplier_multiplier += 0.0002 # gradually increase speed
 
         # handle all the events from this tick
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
             if event.type == pygame.KEYDOWN:
+                # key was pressed down on this tick
                 if event.key in [pygame.K_ESCAPE]:
                     # the player has paused the game. Enter pause menu
                     menu.game_state = 'in menu'
