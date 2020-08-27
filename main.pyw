@@ -3,19 +3,27 @@ import menus
 import asteroids
 from math import sin, cos, radians
 
-GENERATE_OBSTACLE = pygame.USEREVENT+3
+GENERATE_OBSTACLE = pygame.USEREVENT+3 # event type for generating obstacle
 
 
 def resolve_velocity(direction, speed):
+    """
+    Resolve a vector (direction, speed) into x, y components
+    Give direction in degrees
+            0deg --> left
+            90deg --> up
+            180deg --> right
+            >360deg illegal
+    Give speed as pixels/second
+    """
     if 0 > direction > 180: # bullet would be travelling down, not okay.
         return 'why?'
     elif direction < 90:
-        __theta = direction
-        __x = -speed*cos(radians(__theta))
+        __x = -speed*cos(radians(direction))
+        __y = speed * sin(radians(direction))
     else:
-        __theta = 180 - direction
-        __x = speed*cos(radians(__theta))
-    __y = speed*sin(radians(__theta))
+        __x = speed*cos(radians(180 - direction))
+        __y = speed*sin(radians(180 - direction))
 
     return __x, __y
 
@@ -154,6 +162,7 @@ class Player(pygame.sprite.Sprite):
         global game
         game.sprites.add(self.__temp_bullet)
         game.bullets.add(self.__temp_bullet)
+        sounds['phaser'].play()
 
 
 class Game:
@@ -225,24 +234,28 @@ class Game:
 if __name__ == '__main__':
     pygame.font.init()
     resolution = (450, 600)
-    screen = pygame.display.set_mode(resolution)
+    screen = pygame.display.set_mode(resolution) # game window
     clock = pygame.time.Clock()
+    pygame.mixer.init(44100, 16, 4, 2) # initialize the sound module
+    sounds = {
+        'phaser': pygame.mixer.Sound('sounds/phaser.wav')
+    }
 
-    # menu_surface = pygame.image.load('images/menu_background.png').convert_alpha()
+    # create menu object to handle menu pages
     menu = menus.Menu((resolution[0] / 3.4, resolution[1] / 8))
-
+    # make game object with default difficulty, mostly for rendering initial background
     game = Game(1)
-    game.blit(screen)
-    pygame.display.update()
 
+    # main loop
     while True:
         clock.tick(60) # keep framerate at 60fps
-
+        # the program is in any menu page
         if menu.game_state == 'in menu':
             menu.update()
-            game.blit(screen)
-            menu.blit(screen)
-            pygame.display.update(menu.rect)
+            game.blit(screen) # draw game behind menu
+            menu.blit(screen) # draw menu in foreground
+
+            # check for game play or restart buttons being pressed
             for event in pygame.event.get(eventtype=menus.GameCommand):
                 if event.command == "RESTART":
                     # start or restart the game
@@ -257,4 +270,4 @@ if __name__ == '__main__':
             game.update()
             game.blit(screen)
 
-        pygame.display.update()
+        pygame.display.update() # display screen changes to player
