@@ -3,6 +3,7 @@ from sys import exit
 
 ButtonPress = pygame.USEREVENT+1
 GameCommand = pygame.USEREVENT+2
+DifficultyChange = pygame.USEREVENT+4
 button_events = {
     'PLAY': pygame.event.Event(ButtonPress, {'name': 'PLAY'}),
     'INSTRUCTIONS': pygame.event.Event(ButtonPress, {'name': 'INSTRUCTIONS'}),
@@ -10,6 +11,11 @@ button_events = {
 }
 game_events = {
     'RESTART': pygame.event.Event(GameCommand, {'command': 'RESTART'})
+}
+difficulty_changes = {
+    'EASY': pygame.event.Event(DifficultyChange, {'name': 'EASY'}),
+    'MEDIUM': pygame.event.Event(DifficultyChange, {'name': 'MEDIUM'}),
+    'HARD': pygame.event.Event(DifficultyChange, {'name': 'HARD'})
 }
 
 
@@ -38,6 +44,53 @@ def stop():
     """
     pygame.quit() # stop pygame
     exit() # stop python
+
+
+class OptionButtons:
+    def __init__(self, image_path, position, parent_position):
+        self.position = position
+        self.parent_position = parent_position
+        self.images = {
+            'easy': pygame.image.load(image_path+'/1.png').convert_alpha(),
+            'medium': pygame.image.load(image_path+'/2.png').convert_alpha(),
+            'hard': pygame.image.load(image_path+'/3.png').convert_alpha()
+        }
+        self.state = 'medium'
+        self.image = self.images[self.state].copy()
+        self.rect = self.image.get_rect()
+        self.rect.topleft = self.position
+        self.sectors = {
+            'easy': pygame.Rect(self.position, (self.rect.width/3, self.rect.height)),
+            'medium': pygame.Rect(
+                (self.position[0] + self.rect.width / 3, self.position[1]),
+                (self.rect.width / 3, self.rect.height)
+            ),
+            'hard': pygame.Rect(
+                (self.position[0] + (self.rect.width / 3) * 2, self.position[1]),
+                (self.rect.width / 3, self.rect.height)
+            )
+        }
+        self.mouse_pos = (0, 0)
+
+    def update(self):
+        self.mouse_pos = (
+            pygame.mouse.get_pos()[0] - self.parent_position[0], # mouse x pos
+            pygame.mouse.get_pos()[1] - self.parent_position[1] # mouse y pos
+        )
+        if pygame.mouse.get_pressed()[0]:
+            if self.sectors['easy'].collidepoint(self.mouse_pos):
+                self.state = 'easy'
+                pygame.event.post(difficulty_changes['EASY'])
+            elif self.sectors['medium'].collidepoint(self.mouse_pos):
+                self.state = 'medium'
+                pygame.event.post(difficulty_changes['MEDIUM'])
+            elif self.sectors['hard'].collidepoint(self.mouse_pos):
+                self.state = 'hard'
+                pygame.event.post(difficulty_changes['HARD'])
+        self.image = self.images[self.state].copy()
+
+    def blit(self, surface):
+        surface.blit(self.image, self.rect)
 
 
 class Button:
@@ -77,7 +130,7 @@ class Button:
         self.rect = self.image.get_rect()
         self.parent_position = parent_position
         self.mouse_pos = None
-        self.absolute_position = (parent_position[0]+self.position[0], parent_position[1], self.position[1])
+        # self.absolute_position = (parent_position[0]+self.position[0], parent_position[1]+self.position[1])
 
     def update(self):
         """
@@ -133,6 +186,7 @@ class Menu:
 
         self.game_state = 'in menu'
         self.state = 'main' # stores the state of the menu, this is used to choose which menu to render
+        self.difficulty = 'MEDIUM'
 
         # store the background images so the screen can be cleared each tick
         self.large_background_image = pygame.image.load('images/large_menu_background.png').convert_alpha()
@@ -153,24 +207,30 @@ class Menu:
         # fonts for use in menus
         self.fonts = {
             # font name, size(pt), bold, italic
-            'regular': pygame.font.SysFont('Courier New', 15, False, False),
-            'heading': pygame.font.SysFont('Courier New', 18, True, False)
+            'regular': pygame.font.SysFont('Courier New', 16, True, False),
+            'heading': pygame.font.SysFont('Courier New', 19, True, False)
         }
         self.text_colour = (255, 255, 255) # colour for all text in menus
 
         #  Main menu objects |
-        self.main_menu_text = []
+        self.main_menu_text = [
+            create_text(
+                'DIFFICULTY', self.fonts['regular'], self.text_colour,
+                (self.center[0], 174)
+            )
+        ]
         self.main_menu_buttons = [
             Button('images/play_button', (self.center[0], 90), self.position, button_events['PLAY']),
-            Button('images/instructions_button', (self.center[0], 240), self.position, button_events['INSTRUCTIONS']),
-            Button('images/power_button', (self.center[0], 390), self.position, pygame.QUIT)
+            Button('images/instructions_button', (55, 285), self.position, button_events['INSTRUCTIONS']),
+            Button('images/power_button', (125, 285), self.position, pygame.QUIT),
+            OptionButtons('images/option_buttons', (28, 185), self.position)
         ]
 
         # Instruction menu objects
         self.instruction_menu_text = [
             create_text(
                 'INSTRUCTIONS', self.fonts['heading'], self.text_colour,
-                (self.resolution[0] / 2, 30)
+                (116, 30)
             )
         ]
         self.instruction_menu_buttons = [
@@ -254,11 +314,15 @@ class Menu:
                 stop()
 
             if event.type == ButtonPress:
+                print(event)
                 if event.name == 'PLAY':
                     self.game_state = 'in game'
                     pygame.event.post(game_events['RESTART'])
                 elif event.name == 'INSTRUCTIONS':
                     self.state = 'instructions'
+
+            elif event.type == DifficultyChange:
+                self.difficulty = event.name
 
             elif event.type == pygame.KEYDOWN:
                 if event.key in [pygame.K_ESCAPE]:

@@ -33,6 +33,20 @@ def check_collisions(primary, secondaries):
     return collisions
 
 
+class Decorative(pygame.sprite.Sprite):
+    def __init__(self, position, image_path, lifetime):
+        super().__init__()
+        self.position = position
+        self.image = pygame.image.load(image_path).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.lifetime = lifetime
+        self.starting_time = pygame.time.get_ticks()
+
+    def update(self, speed_multiplier):
+        if pygame.time.get_ticks()-self.starting_time > self.lifetime:
+            self.kill()
+
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, position, direction):
         super().__init__()
@@ -144,7 +158,6 @@ class Player(pygame.sprite.Sprite):
 
 class Game:
     def __init__(self, difficulty):
-        # self.state = 'paused'
         self.background_image = pygame.image.load('images/game_background.png')
         self.surface = pygame.image.load('images/game_background.png')
         self.asteroids = pygame.sprite.Group()
@@ -154,16 +167,17 @@ class Game:
         self.player = Player()
         self.sprites.add(self.player)
 
-        # self.player_direction = 'forward'
         self.speed_multiplier = 1
         self.speed_multiplier_multiplier = 1 # used to gradually increase the speed
         self.pressed_keys = None
         self.up_pressed = None
+        self.__collision_point = None
 
     def update(self):
         self.surface.blit(self.background_image, self.background_image.get_rect())
         self.speed_multiplier_multiplier += 0.0002
 
+        # handle all the events from this tick
         for event in pygame.event.get():
             if event.type == pygame.QUIT:  #The user closed the window!
                 stop()
@@ -175,24 +189,29 @@ class Game:
                 elif event.key == pygame.K_SPACE:
                     self.player.shoot()
             elif event.type == GENERATE_OBSTACLE:
-                __asteroid = asteroids.Asteroid(resolution)
+                __asteroid = asteroids.Asteroid(resolution) # create a temporary pointer to new asteroid
+                # add new asteroid to sprite lists for updating an rendering
                 self.asteroids.add(__asteroid)
                 self.sprites.add(__asteroid)
 
-        self.pressed_keys = pygame.key.get_pressed()
+        self.pressed_keys = pygame.key.get_pressed() # get a list of all the keys currently held down
 
+        # if any valid keys for speed increase are pressed
         if self.pressed_keys[pygame.K_UP] or self.pressed_keys[pygame.K_w] or self.pressed_keys[pygame.KMOD_SHIFT]:
-            self.up_pressed = True
+            self.up_pressed = True # this simplifies changing the speed later
         else:
             self.up_pressed = False
 
         if self.up_pressed:
-            self.speed_multiplier = 1.8
+            self.speed_multiplier = 1.8 # the player should move slightly faster
         else:
             self.speed_multiplier = 1
 
+        # update all the sprites and give them the speed multiplier
+        # multiply speed multiplier again to increase speed as the game continues
         self.sprites.update(self.speed_multiplier*self.speed_multiplier_multiplier)
         pygame.sprite.groupcollide(self.asteroids, self.bullets, True, True, pygame.sprite.collide_mask)
+
         self.sprites.draw(self.surface)
         if check_collisions(self.player, self.asteroids):
             print('collided')
@@ -215,9 +234,6 @@ if __name__ == '__main__':
     game = Game(1)
     game.blit(screen)
     pygame.display.update()
-    print(resolve_velocity(60, 25))
-    print(resolve_velocity(90, 25))
-    print(resolve_velocity(120, 25))
 
     while True:
         clock.tick(60) # keep framerate at 60fps
@@ -228,10 +244,14 @@ if __name__ == '__main__':
             menu.blit(screen)
             pygame.display.update(menu.rect)
             for event in pygame.event.get(eventtype=menus.GameCommand):
-                print('button pressed event')
                 if event.command == "RESTART":
-                    print('Restart button')
-                    game = Game(1)
+                    # start or restart the game
+                    if menu.difficulty == 'EASY':
+                        game = Game(0.75) # on easy difficulty
+                    elif menu.difficulty == 'MEDIUM':
+                        game = Game(1) # slightly harder
+                    elif menu.difficulty == 'HARD':
+                        game = Game(1.5) # hardest, kinda nuts
 
         elif menu.game_state == "in game":
             game.update()
