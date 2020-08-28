@@ -213,7 +213,6 @@ class Game:
         self.speed_multiplier = 1 # depends on whether a go-faster key is pressed
         self.speed_multiplier_multiplier = 1 # used to gradually increase the speed
         self.pressed_keys = None
-        self.up_pressed = None
 
     def update(self):
         """
@@ -247,23 +246,20 @@ class Game:
 
         # if any valid keys for speed increase are pressed
         if self.pressed_keys[pygame.K_UP] or self.pressed_keys[pygame.K_w] or self.pressed_keys[pygame.KMOD_SHIFT]:
-            self.up_pressed = True # this simplifies changing the speed later
-        else:
-            self.up_pressed = False
-
-        if self.up_pressed:
-            self.speed_multiplier = 1.8 # the player should move slightly faster
+            self.speed_multiplier = 1.8 # the asteroids should move slightly faster
         else:
             self.speed_multiplier = 1
 
         # update all the sprites and give them the speed multiplier
         # multiply speed multiplier again to increase speed as the game continues
         self.sprites.update(self.speed_multiplier*self.speed_multiplier_multiplier)
+        # test for collisions between bullets and asteroids, delete colliding sprites
         pygame.sprite.groupcollide(self.asteroids, self.bullets, True, True, pygame.sprite.collide_mask)
 
-        self.sprites.draw(self.surface)
+        self.sprites.draw(self.surface) # draw all game sprites to game surface
+
+        # if player is colliding with an asteroid they have lost the round, go to death menu
         if check_collisions(self.player, self.asteroids):
-            print('collided')
             menu.game_state = 'in menu'
             menu.state = 'death'
 

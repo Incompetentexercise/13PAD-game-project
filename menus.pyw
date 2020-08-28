@@ -46,53 +46,6 @@ def stop():
     exit() # stop python
 
 
-class OptionButtons:
-    def __init__(self, image_path, position, parent_position):
-        self.position = position
-        self.parent_position = parent_position
-        self.images = {
-            'easy': pygame.image.load(image_path+'/1.png').convert_alpha(),
-            'medium': pygame.image.load(image_path+'/2.png').convert_alpha(),
-            'hard': pygame.image.load(image_path+'/3.png').convert_alpha()
-        }
-        self.state = 'medium'
-        self.image = self.images[self.state].copy()
-        self.rect = self.image.get_rect()
-        self.rect.topleft = self.position
-        self.sectors = {
-            'easy': pygame.Rect(self.position, (self.rect.width/3, self.rect.height)),
-            'medium': pygame.Rect(
-                (self.position[0] + self.rect.width / 3, self.position[1]),
-                (self.rect.width / 3, self.rect.height)
-            ),
-            'hard': pygame.Rect(
-                (self.position[0] + (self.rect.width / 3) * 2, self.position[1]),
-                (self.rect.width / 3, self.rect.height)
-            )
-        }
-        self.mouse_pos = (0, 0)
-
-    def update(self):
-        self.mouse_pos = (
-            pygame.mouse.get_pos()[0] - self.parent_position[0], # mouse x pos
-            pygame.mouse.get_pos()[1] - self.parent_position[1] # mouse y pos
-        )
-        if pygame.mouse.get_pressed()[0]:
-            if self.sectors['easy'].collidepoint(self.mouse_pos):
-                self.state = 'easy'
-                pygame.event.post(difficulty_changes['EASY'])
-            elif self.sectors['medium'].collidepoint(self.mouse_pos):
-                self.state = 'medium'
-                pygame.event.post(difficulty_changes['MEDIUM'])
-            elif self.sectors['hard'].collidepoint(self.mouse_pos):
-                self.state = 'hard'
-                pygame.event.post(difficulty_changes['HARD'])
-        self.image = self.images[self.state].copy()
-
-    def blit(self, surface):
-        surface.blit(self.image, self.rect)
-
-
 class Button:
     def __init__(self, image_directory, position, parent_position, event):
         """
@@ -162,6 +115,60 @@ class Button:
 
     def blit(self, surface):
         """ Draw the button onto the given surface. """
+        surface.blit(self.image, self.rect)
+
+
+class OptionButtons:
+    def __init__(self, image_path, position, parent_position):
+        """
+        a three way switch for changing the game difficulty
+        posts a difficulty change event  when state is changed
+        """
+        self.position = position
+        self.parent_position = parent_position
+        self.images = {
+            'easy': pygame.image.load(image_path+'/1.png').convert_alpha(),
+            'medium': pygame.image.load(image_path+'/2.png').convert_alpha(),
+            'hard': pygame.image.load(image_path+'/3.png').convert_alpha()
+        }
+        self.state = 'medium'
+        self.image = self.images[self.state]
+        self.rect = self.image.get_rect()
+        self.rect.topleft = self.position
+        # sectors used to check whether the mouse is over any of the switch buttons
+        self.sectors = {
+            'easy': pygame.Rect(self.position, (self.rect.width/3, self.rect.height)),
+            'medium': pygame.Rect(
+                (self.position[0] + self.rect.width / 3, self.position[1]),
+                (self.rect.width / 3, self.rect.height)
+            ),
+            'hard': pygame.Rect(
+                (self.position[0] + (self.rect.width / 3) * 2, self.position[1]),
+                (self.rect.width / 3, self.rect.height)
+            )
+        }
+        self.mouse_pos = (0, 0)
+
+    def update(self):
+        # get mouse position relative to the screen
+        self.mouse_pos = (
+            pygame.mouse.get_pos()[0] - self.parent_position[0], # mouse x pos
+            pygame.mouse.get_pos()[1] - self.parent_position[1]  # mouse y pos
+        )
+        # check if left mouse button pressed
+        if pygame.mouse.get_pressed()[0]:
+            if self.sectors['easy'].collidepoint(self.mouse_pos):
+                self.state = 'easy'
+                pygame.event.post(difficulty_changes['EASY'])
+            elif self.sectors['medium'].collidepoint(self.mouse_pos):
+                self.state = 'medium'
+                pygame.event.post(difficulty_changes['MEDIUM'])
+            elif self.sectors['hard'].collidepoint(self.mouse_pos):
+                self.state = 'hard'
+                pygame.event.post(difficulty_changes['HARD'])
+        self.image = self.images[self.state]
+
+    def blit(self, surface):
         surface.blit(self.image, self.rect)
 
 
