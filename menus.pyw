@@ -4,10 +4,12 @@ from sys import exit
 ButtonPress = pygame.USEREVENT+1
 GameCommand = pygame.USEREVENT+2
 DifficultyChange = pygame.USEREVENT+4
+ExitGame = pygame.USEREVENT+5
 button_events = {
     'PLAY': pygame.event.Event(ButtonPress, {'name': 'PLAY'}),
     'INSTRUCTIONS': pygame.event.Event(ButtonPress, {'name': 'INSTRUCTIONS'}),
-    'INTERNAL_EXIT': pygame.event.Event(ButtonPress, {'name': 'INTERNAL_EXIT'})
+    'INTERNAL_EXIT': pygame.event.Event(ButtonPress, {'name': 'INTERNAL_EXIT'}),
+    'GAME_EXIT': pygame.event.Event(ExitGame)
 }
 game_events = {
     'RESTART': pygame.event.Event(GameCommand, {'command': 'RESTART'})
@@ -229,7 +231,7 @@ class Menu:
         self.main_menu_buttons = [
             Button('images/play_button', (self.center[0], 90), self.position, button_events['PLAY']),
             Button('images/instructions_button', (55, 285), self.position, button_events['INSTRUCTIONS']),
-            Button('images/power_button', (125, 285), self.position, pygame.QUIT),
+            Button('images/power_button', (125, 285), self.position, button_events['GAME_EXIT']),
             OptionButtons('images/option_buttons', (28, 185), self.position)
         ]
 
@@ -327,6 +329,9 @@ class Menu:
                     pygame.event.post(game_events['RESTART'])
                 elif event.name == 'INSTRUCTIONS':
                     self.state = 'instructions'
+
+            elif event.type == ExitGame:
+                stop()
 
             elif event.type == DifficultyChange:
                 self.difficulty = event.name

@@ -18,7 +18,7 @@ class Asteroid(pygame.sprite.Sprite):
             random.randint(0, self.game_resolution[0]),
             -100
         )
-        self.velocity = random.randint(6, 12)
+        self.velocity = random.randint(8, 14)
 
         # load image
         self.image = pygame.image.load(
