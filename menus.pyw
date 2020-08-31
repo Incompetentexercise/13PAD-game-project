@@ -323,7 +323,6 @@ class Menu:
                 stop()
 
             if event.type == ButtonPress:
-                print(event)
                 if event.name == 'PLAY':
                     self.game_state = 'in game'
                     pygame.event.post(game_events['RESTART'])

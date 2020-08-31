@@ -2,8 +2,10 @@ import pygame as pygame
 import menus
 import asteroids
 from math import sin, cos, radians
+import random as random
 
 GENERATE_OBSTACLE = pygame.USEREVENT+3 # event type for generating obstacle
+GENERATE_FUEL = pygame.USEREVENT+6
 
 
 def resolve_velocity(direction, speed):
@@ -49,17 +51,59 @@ def check_collisions(primary, secondaries):
     return collisions
 
 
-class Decorative(pygame.sprite.Sprite):
-    def __init__(self, position, image_path, lifetime):
+# class Decorative(pygame.sprite.Sprite):
+#     def __init__(self, position, image_path, lifetime):
+#         super().__init__()
+#         self.position = position
+#         self.image = pygame.image.load(image_path).convert_alpha()
+#         self.rect = self.image.get_rect()
+#         self.lifetime = lifetime
+#         self.starting_time = pygame.time.get_ticks()
+#
+#     def update(self, speed_multiplier):
+#         if pygame.time.get_ticks()-self.starting_time > self.lifetime:
+#             self.kill()
+
+
+class FuelBar(pygame.sprite.Sprite):
+    def __init__(self):
         super().__init__()
-        self.position = position
-        self.image = pygame.image.load(image_path).convert_alpha()
-        self.rect = self.image.get_rect()
-        self.lifetime = lifetime
-        self.starting_time = pygame.time.get_ticks()
+        self.position = (20, 20)
+        self.fuel_amount = 8
+        self.images = []
+        for i in range(0, 9):
+            self.images.append(pygame.image.load('images/fuel_bar/'+str(i)+'.png').convert_alpha())
+        self.image = self.images[self.fuel_amount]
+        self.rect = self.image.get_rect(topleft=self.position)
+
+    def update(self, speed):
+        if self.fuel_amount > 0:
+            self.fuel_amount -= 0.004 * speed
+        self.image = self.images[int(round(self.fuel_amount))]
+
+    def modify(self, amount):
+        if amount > 0:
+            if self.fuel_amount+amount < 8.5:
+                self.fuel_amount += amount
+        elif amount < 0:
+            if self.fuel_amount+amount > 0:
+                self.fuel_amount += amount
+
+
+class FuelBarrel(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.position = (random.randint(0, resolution[0]), -52)
+        self.speed = random.randint(8, 10)
+        self.image = pygame.image.load('images/fuel_barrel/fuel_barrel.png').convert_alpha()
+        self.rect = self.image.get_rect(topleft=self.position)
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, speed_multiplier):
-        if pygame.time.get_ticks()-self.starting_time > self.lifetime:
+        # update position
+        self.rect.y += self.speed * speed_multiplier
+        # delete if not on screen
+        if self.rect.y > resolution[1]:
             self.kill()
 
 
@@ -135,7 +179,6 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, speed_multiplier):
         self.pressed_keys = pygame.key.get_pressed() # get a list of all the keys that are currently pressed
-
         if self.pressed_keys[pygame.K_LEFT] or self.pressed_keys[pygame.K_a]:
             self.left_pressed = True
         else:
@@ -156,6 +199,8 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction = 'forward'
 
+        if game.fuel_bar.fuel_amount < 1:
+            speed_multiplier *= 0.3
         if speed_multiplier > 1:
             self.speed = 'fast'
         else:
@@ -189,6 +234,7 @@ class Player(pygame.sprite.Sprite):
         global game
         game.sprites.add(self.__temp_bullet)
         game.bullets.add(self.__temp_bullet)
+        game.fuel_bar.modify(-1)
         sounds['phaser'].play()
 
 
@@ -204,11 +250,23 @@ class Game:
 
         # set a timer that posts the generate obstacle event at an interval depending on difficulty
         pygame.time.set_timer(GENERATE_OBSTACLE, int(200 / difficulty))
-        self.asteroids = pygame.sprite.Group()
-        self.sprites = pygame.sprite.Group()
-        self.bullets = pygame.sprite.Group()
+        # set a timer for generating fuel cans, interval increased for higher difficulties
+        pygame.time.set_timer(GENERATE_FUEL, int(1500*difficulty))
+
+        self.top_layer = pygame.sprite.Group() # group for rendering sprites above everything else
+        self.asteroids = pygame.sprite.Group() # asteroids only, for group collisions
+        self.bullets = pygame.sprite.Group() # bullets only, for group collisions
+        self.fuel_cans = pygame.sprite.Group() # fuel cans only, for group collisions
+        self.sprites = pygame.sprite.Group() # ALL sprites, updates and draws first each tick
+
+        self.__collision_holder = None  # holds colliding sprites temporarily
+
         self.player = Player()
         self.sprites.add(self.player)
+
+        self.fuel_bar = FuelBar()
+        self.sprites.add(self.fuel_bar)
+        self.top_layer.add(self.fuel_bar)
 
         self.speed_multiplier = 1 # depends on whether a go-faster key is pressed
         self.speed_multiplier_multiplier = 1 # used to gradually increase the speed
@@ -222,7 +280,7 @@ class Game:
         """
         # clear surface with clean background
         self.surface.blit(self.background_image, self.background_image.get_rect())
-        self.speed_multiplier_multiplier += 0.0002 # gradually increase speed
+        self.speed_multiplier_multiplier += 0.0001 # gradually increase speed
 
         # handle all the events from this tick
         for event in pygame.event.get():
@@ -235,18 +293,26 @@ class Game:
                     menu.game_state = 'in menu'
                     menu.state = 'paused'
                 elif event.key == pygame.K_SPACE:
-                    self.player.shoot()
+                    if self.fuel_bar.fuel_amount > 1:
+                        self.player.shoot()
             elif event.type == GENERATE_OBSTACLE:
                 __asteroid = asteroids.Asteroid(resolution) # create a temporary pointer to new asteroid
                 # add new asteroid to sprite lists for updating an rendering
                 self.asteroids.add(__asteroid)
                 self.sprites.add(__asteroid)
+            elif event.type == GENERATE_FUEL:
+                __fuel_can = FuelBarrel()
+                self.fuel_cans.add(__fuel_can)
+                self.sprites.add(__fuel_can)
 
         self.pressed_keys = pygame.key.get_pressed() # get a list of all the keys currently held down
 
         # if any valid keys for speed increase are pressed
         if self.pressed_keys[pygame.K_UP] or self.pressed_keys[pygame.K_w] or self.pressed_keys[pygame.KMOD_SHIFT]:
-            self.speed_multiplier = 1.8 # the asteroids should move slightly faster
+            if self.fuel_bar.fuel_amount > 1:
+                self.speed_multiplier = 1.8 # the asteroids should move slightly faster
+            else:
+                self.speed_multiplier = 1
         else:
             self.speed_multiplier = 1
 
@@ -257,6 +323,13 @@ class Game:
         pygame.sprite.groupcollide(self.asteroids, self.bullets, True, True, pygame.sprite.collide_mask)
 
         self.sprites.draw(self.surface) # draw all game sprites to game surface
+        self.top_layer.draw(self.surface)
+
+        self.__collision_holder = check_collisions(self.player, self.fuel_cans)
+        if self.__collision_holder:
+            for can in self.__collision_holder:
+                can.kill()
+                self.fuel_bar.modify(1)
 
         # if player is colliding with an asteroid they have lost the round, go to death menu
         if check_collisions(self.player, self.asteroids):
