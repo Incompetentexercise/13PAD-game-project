@@ -78,7 +78,7 @@ class FuelBar(pygame.sprite.Sprite):
 
     def update(self, speed):
         if self.fuel_amount > 0:
-            self.fuel_amount -= 0.004 * speed
+            self.fuel_amount -= 0.006 * speed
         self.image = self.images[int(round(self.fuel_amount))]
 
     def modify(self, amount):
@@ -269,7 +269,7 @@ class Game:
         self.top_layer.add(self.fuel_bar)
 
         self.speed_multiplier = 1 # depends on whether a go-faster key is pressed
-        self.speed_multiplier_multiplier = 1 # used to gradually increase the speed
+        self.speed_multiplier_multiplier = 1*difficulty # used to gradually increase the speed
         self.pressed_keys = None
 
     def update(self):
@@ -369,11 +369,13 @@ if __name__ == '__main__':
                 if event.command == "RESTART":
                     # start or restart the game
                     if menu.difficulty == 'EASY':
-                        game = Game(0.75) # on easy difficulty
+                        game = Game(0.65) # on easy difficulty
                     elif menu.difficulty == 'MEDIUM':
-                        game = Game(1) # slightly harder
+                        game = Game(0.8) # slightly harder
                     elif menu.difficulty == 'HARD':
-                        game = Game(1.5) # hardest, kinda nuts
+                        game = Game(1.15)
+                    elif menu.difficulty == 'expert':
+                        game = Game(1.85) # hardest, kinda nuts
 
         elif menu.game_state == "in game":
             game.update()

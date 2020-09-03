@@ -131,7 +131,8 @@ class OptionButtons:
         self.images = {
             'easy': pygame.image.load(image_path+'/1.png').convert_alpha(),
             'medium': pygame.image.load(image_path+'/2.png').convert_alpha(),
-            'hard': pygame.image.load(image_path+'/3.png').convert_alpha()
+            'hard': pygame.image.load(image_path+'/3.png').convert_alpha(),
+            'expert': pygame.image.load(image_path+'/4.png').convert_alpha()
         }
         self.state = 'medium'
         self.image = self.images[self.state]
@@ -139,14 +140,18 @@ class OptionButtons:
         self.rect.topleft = self.position
         # sectors used to check whether the mouse is over any of the switch buttons
         self.sectors = {
-            'easy': pygame.Rect(self.position, (self.rect.width/3, self.rect.height)),
+            'easy': pygame.Rect(self.position, (self.rect.width/4, self.rect.height)),
             'medium': pygame.Rect(
-                (self.position[0] + self.rect.width / 3, self.position[1]),
-                (self.rect.width / 3, self.rect.height)
+                (self.position[0] + self.rect.width / 4, self.position[1]),
+                (self.rect.width / 4, self.rect.height)
             ),
             'hard': pygame.Rect(
-                (self.position[0] + (self.rect.width / 3) * 2, self.position[1]),
-                (self.rect.width / 3, self.rect.height)
+                (self.position[0] + (self.rect.width / 4) * 2, self.position[1]),
+                (self.rect.width / 4, self.rect.height)
+            ),
+            'expert': pygame.Rect(
+                (self.position[0] + (self.rect.width / 4) * 3, self.position[1]),
+                (self.rect.width / 4, self.rect.height)
             )
         }
         self.mouse_pos = (0, 0)
@@ -167,6 +172,9 @@ class OptionButtons:
                 pygame.event.post(difficulty_changes['MEDIUM'])
             elif self.sectors['hard'].collidepoint(self.mouse_pos):
                 self.state = 'hard'
+                pygame.event.post(difficulty_changes['HARD'])
+            elif self.sectors['expert'].collidepoint(self.mouse_pos):
+                self.state = 'expert'
                 pygame.event.post(difficulty_changes['HARD'])
         self.image = self.images[self.state]
 
@@ -230,9 +238,9 @@ class Menu:
         ]
         self.main_menu_buttons = [
             Button('images/play_button', (self.center[0], 90), self.position, button_events['PLAY']),
-            Button('images/instructions_button', (55, 285), self.position, button_events['INSTRUCTIONS']),
-            Button('images/power_button', (125, 285), self.position, button_events['GAME_EXIT']),
-            OptionButtons('images/option_buttons', (28, 185), self.position)
+            Button('images/instructions_button', (90, 285), self.position, button_events['INSTRUCTIONS']),
+            # Button('images/power_button', (125, 285), self.position, button_events['GAME_EXIT']),
+            OptionButtons('images/four_way_switch', (28, 185), self.position)
         ]
 
         # Instruction menu objects
@@ -267,7 +275,7 @@ class Menu:
             )
         ]
         self.death_menu_buttons = [
-            Button('images/internal_forward_button', (self.center[0], 100), self.position, button_events['PLAY']),
+            Button('images/replay_button', (self.center[0], 100), self.position, button_events['PLAY']),
             Button('images/internal_exit_button', (self.center[0], 200), self.position, button_events['INTERNAL_EXIT']),
         ]
 
