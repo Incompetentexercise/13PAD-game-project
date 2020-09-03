@@ -40,6 +40,7 @@ class Asteroid(pygame.sprite.Sprite):
             self.kill()
 
 
+# this code has not been updated to match the current state of the game so it is not useful
 # if __name__ == '__main__':
 #     def stop():
 #         """
